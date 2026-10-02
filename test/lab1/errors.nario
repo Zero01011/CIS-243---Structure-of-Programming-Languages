@@ -1,0 +1,18 @@
+// the unexpected characters
+@ # $ ^ & | ~ ? : [ ]
+var price = 5 @ 3;
+var é = 1;
+
+// bad scientific notation
+1e ;
+1e+ ;
+2.5E- ;
+
+// too big of a number
+1e400 ;
+
+// an open block comment
+(
+/* layer one
+ /* layer two */
+ still open, didnt close

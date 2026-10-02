@@ -17,7 +17,7 @@ def file_mode(script):
     try:
         with open(script, 'r', encoding='utf-8') as file:
             source_file = file.read()
-    except OSError as error:
+    except (OSError, UnicodeDecodeError) as error:
         print(f"Uh Oh! There was an error opening '{script}': {error}", file=sys.stderr)
         sys.exit(1)
 
@@ -37,7 +37,6 @@ def repl_mode():
         reporter.reset()  # Reset the error flag for repl mode since an error shouldn't stop the whole thing.
 
 def run(source_file, reporter):
-    print(source_file)
     tokens = Scanner(source_file, reporter).scan_tokens()
     for token in tokens:
         print(token)

@@ -19,3 +19,6 @@
 # 4. Numbers
 - `\d+(\.\d+)?`
 
+# Regex for scientific notation (will be adding so I am practicing it here to make sure I got it right)
+- `[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?`
+

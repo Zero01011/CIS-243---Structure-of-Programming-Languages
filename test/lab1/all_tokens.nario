@@ -1,0 +1,47 @@
+// Single character tokens
+( ) { } , . ; * % /
+
+// one or two charcter tokens
++ += - -= ! != = == < <= > >=
++=-=!====<=>=
+
+// keywords
+and class def else false for if null or print 
+return super this true var while
+
+// identifiers
+x _private camelCase snake_case x1 _
+orchid iff print2 classy
+CLASS Print
+nil fun
+
+// numbers
+0 42 3.14 007
+1e3 1E3 2.5e-3 6e+2 1.5E10
+1. .5 1.5.3
+-7
+123abc 1e3e4
+x-=-5 a--b
+
+// strings
+"hello"
+""
+"has // and /* inside"
+"a""b"
+"multi
+line" ;
+
+// comments (even though tecnically we've been testing that the whole time with '//' above each section)
+( / ) // a trailing comment
+/* a block */ *
+/* outer comment
+   /* inner comment */
+   still a comment
+*/ ;
+/**/ /***/ %
+*/
+
+// white space
+var	x	=	1;
+
+
