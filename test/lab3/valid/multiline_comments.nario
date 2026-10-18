@@ -1,0 +1,4 @@
+// a single expression split with a comment
+21 +
+/* a nested /* block */ comment */
+19 // a single line comment

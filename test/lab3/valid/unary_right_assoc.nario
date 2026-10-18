@@ -1,0 +1,2 @@
+// stacked unary operators are right associative
+!!--1

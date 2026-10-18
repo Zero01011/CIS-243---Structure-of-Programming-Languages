@@ -1,0 +1,2 @@
+// each literal type: number, decimal, scientific (+ and -), a string, true, false, null
+7 == 69.42 == 6.7E+2 == 6.7e-2 == "Nario" == true == false == null

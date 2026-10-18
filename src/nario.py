@@ -1,6 +1,8 @@
 import sys
 from error_reporter import ErrorReporter
 from scanner import Scanner
+from nario_parser import Parser
+from AST_printer import ASTPrinter
 
 def main():
     arguments = sys.argv[1:] # the first arg is the script name, so ignore it
@@ -33,13 +35,19 @@ def repl_mode():
         except (KeyboardInterrupt, EOFError): # eof is mainly for piped input, but also ctrl+d on linux and ctrl+z on windows. And of course, keyboard is for ctrl+c
             print("\nSee ya later, alligator!")
             break
+        if not line.strip(): 
+            continue # Skip empty lines, since those arent errors, and instead just ask again
         run(line, reporter)
         reporter.reset()  # Reset the error flag for repl mode since an error shouldn't stop the whole thing.
 
 def run(source_file, reporter):
     tokens = Scanner(source_file, reporter).scan_tokens()
-    for token in tokens:
-        print(token)
+    if reporter.had_error:
+        return # dont parse if there was a lexical error, since it would just cause cascading errors
+    expression = Parser(tokens, reporter).parse()
+    if expression is None:
+        return # the syntax error was already reported, so no AST will get printed
+    print(ASTPrinter().print(expression))
 
 if __name__ == "__main__":
     main()

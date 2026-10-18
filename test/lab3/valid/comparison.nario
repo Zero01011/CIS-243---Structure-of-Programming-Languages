@@ -1,0 +1,2 @@
+// <, >, <=, >=, all the same precedence, left associative
+1 < 2 > 3 <= 4 >= 5

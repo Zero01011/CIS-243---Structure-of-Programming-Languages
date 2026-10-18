@@ -1,0 +1,2 @@
+// +, /, and %, all the same precedence, left associative
+21 * 2 / 19 % 4

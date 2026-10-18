@@ -1,0 +1,2 @@
+// scanner error, so the parser doesnt run, and so no AST is printed
+1 + @
