@@ -2,7 +2,7 @@ import sys
 from error_reporter import ErrorReporter
 from scanner import Scanner
 from nario_parser import Parser
-from AST_printer import ASTPrinter
+from interpreter import Interpreter
 
 def main():
     arguments = sys.argv[1:] # the first arg is the script name, so ignore it
@@ -46,8 +46,8 @@ def run(source_file, reporter):
         return # dont parse if there was a lexical error, since it would just cause cascading errors
     expression = Parser(tokens, reporter).parse()
     if expression is None:
-        return # the syntax error was already reported, so no AST will get printed
-    print(ASTPrinter().print(expression))
+        return # the syntax error was already reported, so theres nothing to evalute
+    Interpreter(reporter).interpret(expression)
 
 if __name__ == "__main__":
     main()
