@@ -44,10 +44,10 @@ def run(source_file, reporter):
     tokens = Scanner(source_file, reporter).scan_tokens()
     if reporter.had_error:
         return # dont parse if there was a lexical error, since it would just cause cascading errors
-    expression = Parser(tokens, reporter).parse()
-    if expression is None:
-        return # the syntax error was already reported, so theres nothing to evalute
-    Interpreter(reporter).interpret(expression)
+    statements = Parser(tokens, reporter).parse()
+    if reporter.had_error:
+        return # there was at least one syntax error, so dont run any of it
+    Interpreter(reporter).interpret(statements)
 
 if __name__ == "__main__":
     main()

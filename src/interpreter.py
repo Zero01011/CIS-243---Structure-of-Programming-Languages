@@ -9,13 +9,23 @@ class Interpreter:
         self.error_reporter = error_reporter
 
         
-    def interpret(self, expression):
-        """ evalutest the expression and prints the rresult, or stops if there was a runtime error"""
+    def interpret(self, statements):
+        """ runs every statement in order, and stops if there's a runtime error """
         try:
-            value = self.evaluate(expression)
-            print(self.stringify(value))
+            for statement in statements:
+                self.execute(statement)
         except NarioRuntimeError:
-            return # the error was already reported, so just stop
+            return # the error was already reported, so we just stop
+
+    def execute(self, statement):
+        statement.accept(self)
+
+    def visit_expression_statement(self, statement):
+        self.evaluate(statement.expression) # statements do not give back a value, so the results just get thrown away
+
+    def visit_print_statement(self, statement):
+        value = self.evaluate(statement.expression)
+        print(self.stringify(value)) 
 
     def evaluate(self, expression):
         return expression.accept(self)

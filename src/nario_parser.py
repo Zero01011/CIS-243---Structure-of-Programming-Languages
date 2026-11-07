@@ -1,5 +1,6 @@
 from token_type import TokenType
 from expression import BinaryExpression, UnaryExpression, GroupingExpression, LiteralExpression
+from statement import ExpressionStatement, PrintStatement
 
 # the binary operators that can never start an expression, except minus (-) since it can be unary
 BINARY_OPERATORS = (
@@ -15,11 +16,28 @@ BINARY_OPERATORS = (
     TokenType.LESS_EQUAL,
 )
 
+# keywords that start a statement, meaning they are safe places to pick back up after an erorr
+# the only statment right now is print, the rest are preparing for later labs
+STATEMENT_KEYWORDS = (
+    TokenType.PRINT,
+    TokenType.CLASS,
+    TokenType.DEF,
+    TokenType.VAR,
+    TokenType.FOR,
+    TokenType.WHILE,
+    TokenType.IF,
+    TokenType.RETURN,
+)
+
 class ParsingError(Exception):
     """ raised on an syntax error, wo we can jump out of every recursive call at once  """
 
 class Parser:
     """ the recursive descent parser, each grammar rule is its own method:
+    program -> statement* EOF ;
+    statement -> expression_statement | print_statement ;
+    expression_statement -> expression ";" ;
+    print_statement -> "print" expression ";" ;
     expression -> equality ;
     equality -> comparison ( ( "!=" | "==" ) comparison )* ;
     comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -35,21 +53,49 @@ class Parser:
         self.current = 0 # this will be the index of the token that is aboubt to be parsed
 
     def parse(self):
-        """ this will parse exactly one expression. IT will return the AST, or NOne if there was a syntax error """
-        try:
-            expression = self.expression()
-            # only one expresssion per input so that anything left over (besided EOF) will be an error
-            if not self.is_at_end():
-                if self.check(TokenType.RIGHT_PAREN):
-                    raise self.error(self.peek(), "Broski, the ')' is missing its twin: '(', you gonna need that.")
-                raise self.error(self.peek(), "Sorry bro, but I can only parse one expression at a time, you gotta clean up the extra stuff after the first expression.")
-            return expression
-        except ParsingError:
-            return None # the error has already been reported so we can just stop parsing\
-        # This is to catch the stuff like (((((((((...1...))))))))) that is nested thousands of levels since it will break Ptyhons call stack and give an actual RecursionError instead of a ParsingError, so we can actually report it nicely isntead of crashing
-        except RecursionError:
-            self.error(self.peek(), "WOAHHH, you got some crazy deep nesting going on here, can you clean that up a bit? I can't handle that much recursion XD.")
-            return None
+        """ parse the statements until the end of the file. Returns a list of statements that parsed without errors """
+        statements = []
+        while not self.is_at_end():
+            try:
+                statements.append(self.statement())
+            except ParsingError:
+                self.panic_mode() # the error was already reported, so we can just skip to the next statement
+            except RecursionError:
+                self.error(self.peek(), "WOAHHH, you got some crazy deep nesting going on here, clean that up man, it's too much recursion.")
+                self.panic_mode() 
+        return statements
+
+    def statement(self):
+        # print is the only statement that starts with a keyword, anything else is an expression statement
+        if self.match(TokenType.PRINT):
+            return self.print_statement()
+        return self.expression_statement()
+
+    def print_statement(self):
+        value = self.expression()
+        self.expect_semicolon("Yo, you need a ';' after the value you're printing.")
+        return PrintStatement(value)
+
+    def expression_statement(self):
+        expression = self.expression()
+        self.expect_semicolon("Hey bro, you need a ';' after the expression.")
+        return ExpressionStatement(expression)
+
+    def expect_semicolon(self, message):
+        # an extra ) shows up right where the ; should be, so it still gets its own error message
+        if self.check(TokenType.RIGHT_PAREN):
+            raise self.error(self.peek(), "Broski, the ')' is missing its twin: '(', you gonna need that.")
+        self.expect(TokenType.SEMICOLON, message)
+
+    def panic_mode(self):
+        """ skip the tokens until we're probably at the start of the next statement """
+        self.consume() # skip the token that caused the error
+        while not self.is_at_end():
+            if self.previous().type == TokenType.SEMICOLON:
+                return # we found the end of the statement, so we can stop skipping
+            if self.peek().type in STATEMENT_KEYWORDS:
+                return # we found the start of a statement, so we can stop skipping
+            self.consume() 
 
     def expression(self):
         return self.equality()
