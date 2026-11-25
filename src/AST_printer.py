@@ -15,6 +15,13 @@ class ASTPrinter:
     def visit_literal_expression(self, expression):
         return self.stringify(expression.value)
  
+    def visit_variable_expression(self, expression):
+        return expression.name.lexeme
+
+    def visit_assign_expression(self, expression):
+        # the name is a token, not a node, so it cant go through wrap
+        return f"(= {expression.name.lexeme} {expression.value.accept(self)})"
+
     def wrap(self, name, *children):
         """puts the name and every child (printed recursively) inside one set of parentheses"""
         printed_children = " ".join(child.accept(self) for child in children)

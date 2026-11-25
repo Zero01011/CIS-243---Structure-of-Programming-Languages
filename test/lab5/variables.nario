@@ -1,0 +1,14 @@
+var a = 1;
+var b = 2;
+print a + b;
+a = 5;
+print a;
+var later;
+later = "set later";
+print later;
+var a = "redeclared";
+print a;
+var count = 10;
+count += 5;
+count -= 3;
+print count;

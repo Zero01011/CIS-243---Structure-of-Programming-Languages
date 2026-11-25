@@ -23,12 +23,13 @@ def file_mode(script):
         print(f"Uh Oh! There was an error opening '{script}': {error}", file=sys.stderr)
         sys.exit(1)
 
-    run(source_file, reporter)
+    run(source_file, reporter, Interpreter(reporter))
     if reporter.had_error:
         sys.exit(1)
 
 def repl_mode():
     reporter = ErrorReporter()
+    interpreter = Interpreter(reporter) # one interpreter for the whole session so variables stick around between lines
     while True:
         try:
             line = input("> ")
@@ -37,17 +38,17 @@ def repl_mode():
             break
         if not line.strip(): 
             continue # Skip empty lines, since those arent errors, and instead just ask again
-        run(line, reporter)
+        run(line, reporter, interpreter)
         reporter.reset()  # Reset the error flag for repl mode since an error shouldn't stop the whole thing.
 
-def run(source_file, reporter):
+def run(source_file, reporter, interpreter):
     tokens = Scanner(source_file, reporter).scan_tokens()
     if reporter.had_error:
         return # dont parse if there was a lexical error, since it would just cause cascading errors
     statements = Parser(tokens, reporter).parse()
     if reporter.had_error:
         return # there was at least one syntax error, so dont run any of it
-    Interpreter(reporter).interpret(statements)
+    interpreter.interpret(statements)
 
 if __name__ == "__main__":
     main()

@@ -15,3 +15,10 @@ class ErrorReporter:
 
     def reset(self):
         self.had_error = False # one bad line in repl mode shouldnt stop the whole program, so im reseting the error flag.
+
+class NarioRuntimeError(Exception):
+    """ raised on a runtime error, it keeps the token and message so we can report it"""
+    def __init__(self, token, message):
+        super().__init__(message)
+        self.token = token
+        self.message = message

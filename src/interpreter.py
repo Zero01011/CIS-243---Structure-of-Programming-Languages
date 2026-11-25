@@ -1,12 +1,12 @@
 from token_type import TokenType
-
-class NarioRuntimeError(Exception):
-    """ gets raised on a runtime error, so we can jump out of every recrusive clal at one like the parser does"""
+from error_reporter import NarioRuntimeError
+from environment import Environment, UNINITIALIZED
 
 class Interpreter:
     """ evaluates the AST with a post order traversal, so the children are evaluated before the parent node"""
     def __init__(self, error_reporter):
         self.error_reporter = error_reporter
+        self.environment = Environment() # starts as the global scope, changes when we go in and out of blocks
 
         
     def interpret(self, statements):
@@ -14,8 +14,9 @@ class Interpreter:
         try:
             for statement in statements:
                 self.execute(statement)
-        except NarioRuntimeError:
-            return # the error was already reported, so we just stop
+        except NarioRuntimeError as error:
+            # report the runtime error, this also catches the ones from environment.py
+            self.error_reporter.report(error.token.line, error.token.column, error.message, f"at '{error.token.lexeme}'")
 
     def execute(self, statement):
         statement.accept(self)
@@ -27,6 +28,26 @@ class Interpreter:
         value = self.evaluate(statement.expression)
         print(self.stringify(value)) 
 
+    def visit_var_statement(self, statement):
+        value = UNINITIALIZED # var x, with no initializer
+        if statement.initializer is not None:
+            value = self.evaluate(statement.initializer)
+        self.environment.define(statement.name.lexeme, value)
+
+    def visit_block_statement(self, statement):
+        #a new scope that points back to the one we're in now
+        self.execute_block(statement.statements, Environment(self.environment))
+
+    def execute_block(self, statements, environment):
+        previous = self.environment
+        try:
+            self.environment = environment
+            for statement in statements:
+                self.execute(statement)
+        finally:
+            # this runseven if theres a runtime error, otherwise the repl would get stuck in the inner scope
+            self.environment = previous
+
     def evaluate(self, expression):
         return expression.accept(self)
 
@@ -34,6 +55,14 @@ class Interpreter:
         # the parser already stored the python value, so we just return it
         return expression.value
  
+    def visit_variable_expression(self, expression):
+        return self.environment.get(expression.name)
+
+    def visit_assign_expression(self, expression):
+        value = self.evaluate(expression.value)
+        self.environment.assign(expression.name, value)
+        return value # assignment is an expression, so print a = 2, prints 2
+
     def visit_grouping_expression(self, expression):
         return self.evaluate(expression.expression)
  
@@ -138,9 +167,8 @@ class Interpreter:
             raise self.error(operator, f"Both sides of '{operator.lexeme}' gotta be numbers my guy.")
  
     def error(self, token, message):
-        """ report the runtime error at the operator and return a NarioRuntimeError so we can raise it """
-        self.error_reporter.report(token.line, token.column, message, f"at '{token.lexeme}'")
-        return NarioRuntimeError()
+        """ make a NarioRuntimeError so we can raise it, interpret() reports it """
+        return NarioRuntimeError(token, message)
  
     @staticmethod
     def stringify(value):

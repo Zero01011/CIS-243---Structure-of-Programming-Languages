@@ -42,4 +42,19 @@ class LiteralExpression(Expression):
     def accept(self, visitor):
         return visitor.visit_literal_expression(self)
 
-    
+class VariableExpression(Expression):
+    """using a vairable, like the x in print x;"""
+    def __init__(self, name):
+        self.name = name
+
+    def accept(self, visitor):
+        return visitor.visit_variable_expression(self)
+
+class AssignExpression(Expression):
+    """assigning a value to a variable, like x = 5;"""
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def accept(self, visitor):
+        return visitor.visit_assign_expression(self)
